@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>ASCII art</title>
+
+        <style>
+            * {
+                box-sizing: border-box;
+                /* letter-spacing: 10px; */
+
+                margin: 0;
+                padding: 0;
+            }
+
+            body {
+                padding: 2rem;
+
+                display: grid;
+                gap: 1rem;
+
+                font-family: sans-serif;
+            }
+
+            main {
+                display: contents;
+            }
+
+            canvas {
+                width: auto;
+                max-height: 75vh;
+
+                border: 2px solid black;
+            }
+        </style>
+
+        <script type="module">
+            // const CHARACTERS = '!"#$%&\'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~'
+
+            // const densityCanvas = new OffscreenCanvas(20, 20)
+            // const densityCanvasContext = densityCanvas.getContext('2d', { willReadFrequently: true })
+
+            // densityCanvasContext.font = '18px monospace'
+            // // densityCanvas.width = densityCanvasContext.measureText(CHARACTERS[0]).width
+
+            // let density = []
+
+            // for (const character of CHARACTERS) {
+            //     density.push([ character, 0 ])
+            //     const characterDensity = density.at(-1)
+
+            //     densityCanvasContext.clearRect(0, 0, densityCanvas.width, densityCanvas.height)
+            //     densityCanvasContext.fillText(character, 0, 18)
+
+            //     const imageData = densityCanvasContext.getImageData(0, 0, 18, 18)
+
+            //     for (let index = 0; index < imageData.data.length; index += 4) {
+            //         characterDensity[1] += imageData.data[index + 3]
+            //     }
+            // }
+
+            // density.sort((a, b) => a[1] < b[1] ? 1 : -1)
+            // const densityString = density.reduce((accumulator, currentValue) => accumulator + currentValue[0], '')
+
+            // console.log(densityString)
+
+            // const DENSITY = '@&%m$NWM8B0DXRQ#dHbkOwGhA496VKEgUPqpaSexo25unfZYt13IlFCiysv7zrJ?TLj[]c}{>+)|<(*!/\\=^"~;:,.\'-`_'
+            const DENSITY = '@&%$#?[]}{>+)|<(*!/\\=^"~;:,.\'-`_'
+
+            const fileInput = document.querySelector('input[type="file"]')
+
+            const files = await new Promise((resolve) => {
+                fileInput.addEventListener('change', ({ currentTarget: { files } }) => {
+                    resolve(files)
+                }, { once: true })
+            })
+
+            const [file] = files
+            const imageBitmap = await createImageBitmap(file)
+            const imageCanvas = new OffscreenCanvas(imageBitmap.width/50, imageBitmap.height/50)
+            const imageCanvasContext = imageCanvas.getContext('2d')
+
+            imageCanvasContext.drawImage(imageBitmap, 0, 0, imageCanvas.width, imageCanvas.height)
+
+            const canvas = document.createElement('canvas')
+            const canvasContext = canvas.getContext('2d')
+
+            canvas.width = imageCanvas.width * 20
+            canvas.height = imageCanvas.height * 20
+
+            canvasContext.fillRect(0, 0, canvas.width, canvas.height);
+            canvasContext.fillStyle = 'white'
+            canvasContext.font = '23px monospace'
+
+            fileInput.replaceWith(canvas)
+
+            let yIndex = 0
+            let xIndex = 0
+
+            const imageData = imageCanvasContext.getImageData(0,0,imageCanvas.width,imageCanvas.height)
+
+            for (let index = 0; index < imageData.data.length; index += 4) {
+                const rectangleIndex = index / 4
+
+                yIndex = Math.floor(rectangleIndex / imageData.width) + 1
+                xIndex = rectangleIndex % imageData.width
+
+                const grey = [
+                    imageData.data[index],
+                    imageData.data[index + 1],
+                    imageData.data[index + 2],
+                ].reduce((a, b) => a + b, 0) / 3
+                
+                canvasContext.fillText(
+                    DENSITY[Math.floor(grey / 255 * (DENSITY.length - 1))],
+                    xIndex * 20,
+                    yIndex * 20
+                )
+            }
+        </script>
+    </head>
+
+    <body>
+        <main>
+
+            <h1>ASCII art</h1>
+
+            <input accept="image/*" type="file">
+        </main>
+    </body>
+</html>
